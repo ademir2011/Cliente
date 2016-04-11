@@ -6,7 +6,9 @@
 package Reply;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -22,6 +24,10 @@ public class Reply implements Serializable {
     private long userId;
     private String login;
     private String senha;
+    private List<String> paths;
+    
+    public Reply() {
+    }
 
     public Reply(String obs) {
         this.obs = obs;
@@ -89,7 +95,13 @@ public class Reply implements Serializable {
         this.senha = senha;
     }
 
-    
+    public List<String> getPaths() {
+        return paths;
+    }
+
+    public void setPaths(List<String> paths) {
+        this.paths = new ArrayList<String>(paths);
+    }
     
     
 }

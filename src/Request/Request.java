@@ -7,6 +7,7 @@ package Request;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -22,7 +23,11 @@ public class Request implements Serializable {
     private String login;
     private String senha;
     private String operacao;
+    private List<String> paths;
 
+    public Request() {
+    }
+    
     public Request(String login, String senha, String operacao) {
         this.login = login;
         this.senha = senha;
@@ -93,6 +98,14 @@ public class Request implements Serializable {
 
     public void setOperacao(String operacao) {
         this.operacao = operacao;
+    }
+
+    public List<String> getPaths() {
+        return paths;
+    }
+
+    public void setPaths(List<String> paths) {
+        this.paths = paths;
     }
 
     
