@@ -3,8 +3,11 @@ package cliente;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -67,14 +70,22 @@ public class ListFilesUtil {
      * List all files from a directory and its subdirectories
      * @param directoryName to be listed
      */
-    public List<String> listFilesAndFilesSubDirectories(List<String> paths, String directoryName) throws IOException{
+    public Map<String, String> listFilesAndFilesSubDirectories(Map<String, String> paths, String directoryName) throws IOException{
         
         for(File key : new File(directoryName).listFiles()){
-            if(key.isDirectory()){
-                paths.add(key.getAbsolutePath());
+            if(key.isDirectory() && !key.getName().equals("pasta sem nome")){
+                paths.put(key.getAbsolutePath(),"isDirectory");
                 listFilesAndFilesSubDirectories(paths, directoryName+"/"+key.getName());
             } else {
-                paths.add(key.getAbsolutePath());
+                
+                if(!key.getName().equals("novo ficheiro")){
+                    Date lastModified = new Date(key.lastModified()); 
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");  
+                    String formattedDateString = formatter.format(lastModified);
+
+                    paths.put(key.getAbsolutePath(), formattedDateString);
+                }
+                
             }
         }
         

@@ -8,7 +8,9 @@ package Reply;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -24,7 +26,9 @@ public class Reply implements Serializable {
     private long userId;
     private String login;
     private String senha;
-    private List<String> paths;
+    private Map<String, String> paths;
+    private long lastModified;
+    private boolean directory;
     
     public Reply() {
     }
@@ -95,12 +99,28 @@ public class Reply implements Serializable {
         this.senha = senha;
     }
 
-    public List<String> getPaths() {
+    public Map<String, String> getPaths() {
         return paths;
     }
 
-    public void setPaths(List<String> paths) {
-        this.paths = new ArrayList<String>(paths);
+    public void setPaths(Map<String, String> paths) {
+        this.paths = new HashMap<String, String>(paths);
+    }
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
+
+    public boolean isDirectory() {
+        return directory;
+    }
+
+    public void setDirectory(boolean directory) {
+        this.directory = directory;
     }
     
     

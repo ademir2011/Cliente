@@ -13,6 +13,8 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,7 +26,10 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 
@@ -185,52 +190,128 @@ public class Cliente {
         
         System.out.println("...Sincronizando...");
         ListFilesUtil listFilesUtil = new ListFilesUtil();
-        List<String> paths = new ArrayList<String>();
+        Map<String, String> paths;
+        Map<String, String> pathsDownload = null;
         
         while(true){
             
+            paths = new HashMap<String, String>();
+            pathsDownload = new HashMap<String, String>();
             Request request = new Request();
-
-            request.setLogin(usuario.getLogin());
-            request.setSenha(usuario.getSenha());
+            
             request.setOperacao("e/r lista de arquivos");
-            request.setPaths(paths);
-
+            
             Reply reply = sendAndReceiverObjectRequestReply(request, socket, oos, ois);
+            
+            System.out.println("--------MEU SERVIDOR-----");
 
-            for(String key : reply.getPaths()){    
-                System.out.println(key);
+            for(String key : reply.getPaths().keySet()){    
+                System.out.println(key+" - "+reply.getPaths().get(key));
             }
             
-//            paths = listFilesUtil.listFilesAndFilesSubDirectories(paths, dir);
-//            
-//            for( String key : paths ){
-//                System.out.println(key);
-//            }
+            System.out.println("-------EU / CLIENTE-----");
             
-            boolean equals = false;
+            paths = listFilesUtil.listFilesAndFilesSubDirectories(paths, dir);
             
-//            for(String key : reply.getPaths()){    
-//                
-//                for(String key2 : paths){
-//                    
-//                    if(key.equals(key2)){
-//                        equals = true;
-//                    } else {
-//                        equals = false;
-//                    }
-//                    
-//                }
-//                
-//                if(!equals){
-//                    System.out.println(key);
-//                }
-//                
-//            }
+            paths = getSplitPaths(paths, dir);
             
+            for(String key : paths.keySet()){    
+                System.out.println(key+" - "+paths.get(key));
+            }
             
+            System.out.println("------ Sinchro ----- ");
             
-            Thread.sleep(7000);
+            for(String key : paths.keySet()){    
+                
+                boolean equals = false;
+                
+                for(String key2 : reply.getPaths().keySet() ){
+                    
+                    if(key.equals(key2) && reply.getPaths().get(key).equals( paths.get(key2) ) ){
+                        equals = true;
+                        System.out.println("Arquivo sincronizado -> "+key2);
+                    } else {
+                    }
+                    
+                }
+                
+                if(!equals){
+                    
+                    System.out.println("Arquivo para sincronizar -> "+key);
+                    
+                    Request requestUpload = new Request();
+                    
+                    File file = new File(dir+key);
+                    
+                    requestUpload.setNome(key);
+                    requestUpload.setOperacao("upload");
+                    
+                    if(file.isDirectory()) { 
+                        requestUpload.setDirectory(true);
+                        
+                    } else { 
+                        byte[] bFile = fileToByteArray(file);
+                        requestUpload.setDirectory(false); 
+                        requestUpload.setConteudo( bFile );
+                        requestUpload.setLastModified(file.lastModified());
+                    }
+                    
+                    sendAndReceiverObjectRequestReply(requestUpload, socket, oos, ois);
+                    
+                    System.out.println("Arquivo "+key+" sincronizado");
+                    
+                    break;
+                }
+                
+            }
+            
+            request.setOperacao("e/r lista de arquivos");
+            
+            Reply replyGetFiles = sendAndReceiverObjectRequestReply(request, socket, oos, ois);
+            
+            pathsDownload = listFilesUtil.listFilesAndFilesSubDirectories(pathsDownload, dir);
+            
+            pathsDownload = getSplitPaths(pathsDownload, dir);
+            
+            for(String key : replyGetFiles.getPaths().keySet()){    
+
+                boolean equals = false; 
+
+                for( String key2 : paths.keySet() ){
+
+                    System.out.println(key + "-" + key2);
+                    if(key.equals(key2) && replyGetFiles.getPaths().get(key).equals( paths.get(key2) ) ){
+                        equals = true;
+
+                    } else {}
+
+                }  
+
+                if(!equals){
+
+                    System.out.println(" Arquivo que vai baixar -> "+key);
+                    System.out.println(" Value -> "+replyGetFiles.getPaths().get(key));
+
+                    Request requestDownload = new Request();
+
+                    requestDownload.setNome(key);
+                    requestDownload.setOperacao("download");
+
+                    Reply replyDownload = sendAndReceiverObjectRequestReply(requestDownload, socket, oos, ois);
+
+                    createFilesFromReply(replyDownload);
+
+                    System.out.println("Arquivo "+key+" baixado do servidor");
+
+                    break;
+                    
+                }
+                
+                
+               
+            }
+            
+            Thread.sleep(3000);
             
         }
     }
@@ -244,6 +325,47 @@ public class Cliente {
         System.out.println(reply.getObs());
         
         return reply;
+        
+    }
+    
+    public static Map<String,String> getSplitPaths(Map<String,String> paths, String split){
+        
+        Map<String, String> tempPaths = new HashMap<String, String>();
+        
+        for(Map.Entry<String, String> entry : paths.entrySet()) {
+            
+            String fullPath = entry.getKey();
+            String array[] = fullPath.split(split);
+            tempPaths.put(array[1], entry.getValue());
+
+        }
+        
+        return tempPaths;
+    }
+    
+    public static byte[] fileToByteArray(File file) throws FileNotFoundException, IOException{
+        FileInputStream fis;
+        byte[] bFile = new byte[(int) file.length()];
+        fis = new FileInputStream(file);
+        fis.read(bFile);
+        fis.close();
+        return bFile;
+    }
+    
+    public static void createFilesFromReply(Reply reply) throws FileNotFoundException, IOException{
+        System.out.println("teste1"+reply.getNome());
+        if(reply.getNome() != null){
+           if(reply.isDirectory() && !reply.getNome().equals("pasta sem nome")){
+                new File(dir+reply.getNome()).mkdirs();
+            } else {
+                System.out.println("Arquivo sendo criado");
+                FileOutputStream fos = new FileOutputStream(dir+reply.getNome());
+                File file = new File(dir+reply.getNome());
+                file.setLastModified(reply.getLastModified());
+                fos.write(reply.getConteudo());
+                fos.close();
+            } 
+        }
         
     }
     

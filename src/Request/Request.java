@@ -8,6 +8,7 @@ package Request;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -23,7 +24,10 @@ public class Request implements Serializable {
     private String login;
     private String senha;
     private String operacao;
-    private List<String> paths;
+    private Map<String, String> paths;
+    private String obs;
+    private long lastModified;
+    private boolean directory;
 
     public Request() {
     }
@@ -100,16 +104,39 @@ public class Request implements Serializable {
         this.operacao = operacao;
     }
 
-    public List<String> getPaths() {
+    public Map<String, String> getPaths() {
         return paths;
     }
 
-    public void setPaths(List<String> paths) {
+    public void setPaths(Map<String, String> paths) {
         this.paths = paths;
     }
 
-    
+    public String getObs() {
+        return obs;
+    }
 
+    public void setObs(String obs) {
+        this.obs = obs;
+    }
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
+
+    public boolean isDirectory() {
+        return directory;
+    }
+
+    public void setDirectory(boolean directory) {
+        this.directory = directory;
+    }
+    
+    
     
     
 }
